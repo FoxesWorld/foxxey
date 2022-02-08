@@ -1,0 +1,7 @@
+# User-related files
+.idea/
+
+# Auto-generated files
+*.log
+.gradle/
+build/
