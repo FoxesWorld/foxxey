@@ -15,6 +15,7 @@ val mockito = "4.3.1"
 val junitBom = "5.8.2"
 val logback = "1.2.10"
 val kotlinLogging = "2.1.21"
+val serializationJson = "1.3.2"
 
 ///////////////////////////////////////////////////////////////////////////
 // Settings
@@ -22,6 +23,7 @@ val kotlinLogging = "2.1.21"
 
 plugins {
     kotlin("jvm") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
@@ -45,6 +47,9 @@ dependencies {
     // Config
     implementation(hoplite("core"))
     implementation(hoplite("json"))
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", serializationJson)
 
     // DI
     implementation(koin("core"))

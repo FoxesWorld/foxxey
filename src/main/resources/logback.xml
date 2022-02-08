@@ -1,0 +1,26 @@
+<configuration>
+    <appender name="TERMINAL">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%d{HH:mm:ss} %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>debug.log</file>
+
+        <encoder>
+            <pattern>%d{HH:mm:ss} %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    
+    <root level="debug">
+        <appender-ref ref="TERMINAL"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
