@@ -13,12 +13,12 @@ private const val CONFIG_FORMAT: String = "json"
 /**
  * @author vie10
  **/
-class HopliteConfigUploader(
+class JsonFileConfigUploader(
     private val configFileProvider: FileProvider = FileProvider {
         File(CONFIG_FOLDER_NAME, it)
     },
     private val defaultConfigFileProvider: FileProvider = FileProvider {
-        File(HopliteConfigUploader::class.java.getResource("/$it")!!.file)
+        File(JsonFileConfigUploader::class.java.getResource("/$it")!!.file)
     }
 ) : BaseConfigUploader() {
 
