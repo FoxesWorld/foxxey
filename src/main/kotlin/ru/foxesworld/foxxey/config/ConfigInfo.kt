@@ -7,14 +7,15 @@ import kotlin.reflect.KClass
  * @author vie10
  **/
 data class ConfigInfo(
-    @ConfigAlias("group")
-    val group: String = "",
     @ConfigAlias("name")
     val name: String,
-    @ConfigAlias("class")
+    @ConfigAlias("group")
+    val group: String,
+    @ConfigAlias("className")
     val className: String
 ) {
 
-    internal val clazz: KClass<out Any>
-        get() = Class.forName(className).kotlin
+    internal val clazz: KClass<out Any> by lazy {
+        Class.forName(className).kotlin
+    }
 }
