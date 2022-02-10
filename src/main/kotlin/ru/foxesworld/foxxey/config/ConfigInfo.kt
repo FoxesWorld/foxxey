@@ -1,17 +1,17 @@
 package ru.foxesworld.foxxey.config
 
-import com.sksamuel.hoplite.ConfigAlias
+import kotlinx.serialization.SerialName
 import kotlin.reflect.KClass
 
 /**
  * @author vie10
  **/
 data class ConfigInfo(
-    @ConfigAlias("name")
+    @SerialName("name")
     val name: String,
-    @ConfigAlias("group")
+    @SerialName("group")
     val group: String,
-    @ConfigAlias("className")
+    @SerialName("className")
     val className: String
 ) {
 
