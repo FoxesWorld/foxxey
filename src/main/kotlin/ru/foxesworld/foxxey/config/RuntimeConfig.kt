@@ -1,5 +1,6 @@
 package ru.foxesworld.foxxey.config
 
+import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberProperties
@@ -25,6 +26,14 @@ object RuntimeConfig {
         set(value) {
             valuesMap[fullName] = value
         }
+
+    @Synchronized
+    fun KClass<*>.removeFromRuntime() {
+        memberProperties.forEach { property ->
+            val fullName = property.fullName
+            valuesMap.remove(fullName)
+        }
+    }
 
     @Synchronized
     fun Any.uploadToRuntime() {

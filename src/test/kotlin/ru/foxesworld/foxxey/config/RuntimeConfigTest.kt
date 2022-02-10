@@ -3,7 +3,9 @@ package ru.foxesworld.foxxey.config
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import ru.foxesworld.foxxey.config.RuntimeConfig.removeFromRuntime
 import ru.foxesworld.foxxey.config.RuntimeConfig.runtimeValue
 import ru.foxesworld.foxxey.config.RuntimeConfig.uploadToRuntime
 
@@ -15,6 +17,33 @@ internal class RuntimeConfigTest {
     @BeforeEach
     fun cleanRuntimeConfig() {
         RuntimeConfig.clean()
+    }
+
+    @Test
+    fun `GIVEN empty runtime config WHEN remove config THEN does not throw`() {
+        assertDoesNotThrow {
+            TestConfig::class.removeFromRuntime()
+        }
+    }
+
+    @Test
+    fun `GIVEN removed config WHEN invokes value THEN throws NullPointerException`() {
+        val config = TestConfig()
+        config.uploadToRuntime()
+        TestConfig::class.removeFromRuntime()
+        assertThrows<NullPointerException> {
+            TestConfig::name.runtimeValue
+        }
+    }
+
+    @Test
+    fun `GIVEN removed config WHEN invokes nullable value THEN returns null`() {
+        val config = TestConfig()
+        config.uploadToRuntime()
+        TestConfig::class.removeFromRuntime()
+        assertTrue {
+            TestConfig::nullableName.runtimeValue == null
+        }
     }
 
     @Test
