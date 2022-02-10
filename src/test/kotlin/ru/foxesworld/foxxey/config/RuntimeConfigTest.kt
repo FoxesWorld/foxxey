@@ -1,11 +1,11 @@
 package ru.foxesworld.foxxey.config
 
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import ru.foxesworld.foxxey.config.RuntimeConfig.runtimeValue
 import ru.foxesworld.foxxey.config.RuntimeConfig.uploadToRuntime
-import kotlin.test.assertTrue
 
 /**
  * @author vie10

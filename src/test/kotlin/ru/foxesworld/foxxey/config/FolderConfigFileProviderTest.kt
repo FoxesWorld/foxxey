@@ -3,7 +3,7 @@ package ru.foxesworld.foxxey.config
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.io.File
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assertions.*
 
 /**
  * @author vie10

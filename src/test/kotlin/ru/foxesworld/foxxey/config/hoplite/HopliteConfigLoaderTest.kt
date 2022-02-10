@@ -11,7 +11,7 @@ import ru.foxesworld.foxxey.config.ConfigFile
 import ru.foxesworld.foxxey.config.ConfigFileProvider
 import ru.foxesworld.foxxey.config.ConfigInfo
 import kotlin.reflect.jvm.jvmName
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assertions.*
 
 private const val DEFAULT_NAME = "default name"
 
