@@ -1,23 +1,11 @@
 package ru.foxesworld.foxxey.logging
 
-import kotlinx.coroutines.runBlocking
 import mu.KLogger
-import mu.KotlinLogging
 import kotlin.system.measureTimeMillis
 
 /**
  * @author vie10
  **/
-
-private val log = KotlinLogging.logger { }
-
-fun main() {
-    runBlocking {
-        log.wrappedRunWithoutResult("module", "start") {
-
-        }
-    }
-}
 
 fun KLogger.debugExceptionAndInfoMessage(exception: Throwable, msg: () -> Any) {
     info(msg)

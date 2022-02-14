@@ -1,18 +1,16 @@
 package ru.foxesworld.foxxey.modules
 
-import kotlinx.serialization.SerialName
 import org.koin.core.component.KoinComponent
 import ru.foxesworld.foxxey.commands.Command
-import ru.foxesworld.foxxey.config.ConfigInfo
+import kotlin.reflect.KClass
 
 /**
  * @author vie10
  **/
 interface Module : KoinComponent {
 
-    val info: Info
     val state: State
-    val commands: List<Command>
+    val info: Info
 
     suspend fun start()
 
@@ -22,34 +20,21 @@ interface Module : KoinComponent {
 
     suspend fun unload()
 
-    data class Info(
-        @SerialName("id")
-        val id: String,
-        @SerialName("name")
-        val name: String,
-        @SerialName("version-code")
-        val versionCode: String,
-        @SerialName("version")
-        val version: String,
-        @SerialName("dependencies")
-        val dependencies: Set<Dependency>,
-        @SerialName("config")
-        val config: Set<ConfigInfo>
-    ) {
+    interface Info {
 
-        data class Dependency(
-            @SerialName("id")
-            val id: String,
-            @SerialName("version-code")
-            val versionCode: VersionCode
-        ) {
+        val id: String
+        val name: String
+        val version: Version
+        val dependencies: Set<Dependency>
+        val description: String
+        val config: Set<KClass<out Any>>
+        val commands: Set<KClass<Command>>
 
-            data class VersionCode(
-                @SerialName("from")
-                val from: Int,
-                @SerialName("to")
-                val to: Int
-            )
+        data class Version(val name: String, val code: Int)
+
+        data class Dependency(val id: String, val versionCode: VersionCode) {
+
+            data class VersionCode(val from: Int, val to: Int)
         }
     }
 
