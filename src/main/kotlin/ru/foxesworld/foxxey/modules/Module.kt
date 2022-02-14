@@ -2,7 +2,7 @@ package ru.foxesworld.foxxey.modules
 
 import org.koin.core.component.KoinComponent
 import ru.foxesworld.foxxey.commands.Command
-import kotlin.reflect.KClass
+import ru.foxesworld.foxxey.config.ConfigInfo
 
 /**
  * @author vie10
@@ -11,6 +11,8 @@ interface Module : KoinComponent {
 
     val state: State
     val info: Info
+    val commands: Set<Command>
+    val configInfo: Set<ConfigInfo>
 
     suspend fun start()
 
@@ -20,6 +22,10 @@ interface Module : KoinComponent {
 
     suspend fun unload()
 
+    suspend fun addCommand(command: Command)
+
+    suspend fun addConfigInfo(configInfo: ConfigInfo)
+
     interface Info {
 
         val id: String
@@ -27,8 +33,6 @@ interface Module : KoinComponent {
         val version: Version
         val dependencies: Set<Dependency>
         val description: String
-        val config: Set<KClass<out Any>>
-        val commands: Set<KClass<Command>>
 
         data class Version(val name: String, val code: Int)
 

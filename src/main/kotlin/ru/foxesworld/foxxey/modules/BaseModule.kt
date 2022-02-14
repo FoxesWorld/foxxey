@@ -3,9 +3,9 @@ package ru.foxesworld.foxxey.modules
 import mu.KotlinLogging
 import org.koin.dsl.module
 import ru.foxesworld.foxxey.commands.Command
+import ru.foxesworld.foxxey.config.ConfigInfo
 import ru.foxesworld.foxxey.logging.wrappedRunWithoutResult
 import ru.foxesworld.foxxey.modules.Module.State
-import kotlin.reflect.KClass
 import kotlin.reflect.full.companionObjectInstance
 import org.koin.core.module.Module as KoinModule
 
@@ -19,6 +19,8 @@ abstract class BaseModule(
 ) : Module {
 
     private val koinModule: KoinModule by lazy { module { providing?.invoke(this) } }
+    override val commands: Set<Command> = hashSetOf()
+    override val configInfo: Set<ConfigInfo> = hashSetOf()
     final override val info: Info by lazy { this::class.companionObjectInstance as Info }
     final override val state: State
         get() = _state
@@ -80,6 +82,14 @@ abstract class BaseModule(
 
     protected open fun onUnload() {}
 
+    final override suspend fun addCommand(command: Command) {
+        (commands as MutableSet).add(command)
+    }
+
+    final override suspend fun addConfigInfo(configInfo: ConfigInfo) {
+        (this.configInfo as MutableSet).add(configInfo)
+    }
+
     final override fun toString(): String {
         return "${info.name} v. ${info.version}"
     }
@@ -93,7 +103,7 @@ abstract class BaseModule(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is BaseModule) return false
+        if (other !is Module) return false
 
         if (info.id != other.info.id) return false
 
@@ -106,8 +116,6 @@ abstract class BaseModule(
         override val description: String = "The module hasn't description for now",
         override val name: String = id,
         override val dependencies: Set<Module.Info.Dependency> = emptySet(),
-        override val config: Set<KClass<out Any>> = emptySet(),
-        override val commands: Set<KClass<Command>> = emptySet()
     ) : Module.Info {
 
 
@@ -122,8 +130,6 @@ abstract class BaseModule(
             if (description != other.description) return false
             if (name != other.name) return false
             if (dependencies != other.dependencies) return false
-            if (config != other.config) return false
-            if (commands != other.commands) return false
 
             return true
         }
@@ -134,8 +140,6 @@ abstract class BaseModule(
             result = 31 * result + description.hashCode()
             result = 31 * result + name.hashCode()
             result = 31 * result + dependencies.hashCode()
-            result = 31 * result + config.hashCode()
-            result = 31 * result + commands.hashCode()
             return result
         }
     }
