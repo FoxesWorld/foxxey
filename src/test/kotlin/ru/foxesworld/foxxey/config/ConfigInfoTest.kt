@@ -1,30 +1,35 @@
 package ru.foxesworld.foxxey.config
 
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import kotlin.reflect.jvm.jvmName
 
 /**
  * @author vie10
- */
-internal class ConfigInfoTest {
+ **/
+class ConfigInfoTest : BehaviorSpec({
 
-    @Test
-    fun `GIVEN config info with existent class name WHEN invokes clazz THEN does not throw`() {
-        val configInfo = new(className = ConfigInfoTest::class.jvmName)
-        assertDoesNotThrow {
-            configInfo.clazz
+    given("config info with existent class jvm name") {
+        `when`("invokes class") {
+            then("returns class with the jvm name") {
+                val classJvmName = ConfigInfoTest::class.jvmName
+                val configInfo = ConfigInfo("", "", classJvmName)
+
+                configInfo.clazz.jvmName shouldBe classJvmName
+            }
         }
     }
 
-    @Test
-    fun `GIVEN config info with not existent class name WHEN invokes clazz THEN throws ClassNotFoundException`() {
-        val configInfo = new()
-        assertThrows<ClassNotFoundException> {
-            configInfo.clazz
+    given("config info with not existent class jvm name") {
+        `when`("invokes class") {
+            then("throws ClassNotFoundException") {
+                val configInfo = ConfigInfo("", "", "")
+
+                shouldThrow<ClassNotFoundException> {
+                    configInfo.clazz
+                }
+            }
         }
     }
-
-    private fun new(name: String = "", group: String = "", className: String = "") = ConfigInfo(name, group, className)
-}
+})

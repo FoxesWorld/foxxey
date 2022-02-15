@@ -1,23 +1,28 @@
 package ru.foxesworld.foxxey.commands
 
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 
 /**
  * @author vie10
- */
-internal class BaseCommandTest {
+ **/
+internal class BaseCommandTest : BehaviorSpec({
 
-    @Test
-    fun `GIVEN implementation without overrides WHEN execute THEN help is returned`() {
-        val help = "some help"
-        val implementation = new(help = help)
-        assertTrue {
-            implementation.execute().getOrNull() == help
+    given("implementation without overrides") {
+        `when`("executes") {
+            then("returns help") {
+                val help = "some help"
+                val implementation = ImplementationWithoutOverrides(help = help)
+                implementation.execute().getOrThrow().shouldBe(help)
+            }
         }
     }
+}) {
 
-    private fun new(name: String = "", description: String = "", group: String = "", help: String = ""): BaseCommand {
-        return object : BaseCommand(name, description, group, help) {}
-    }
+    class ImplementationWithoutOverrides(
+        name: String = "",
+        description: String = "",
+        group: String = "",
+        help: String = ""
+    ) : BaseCommand(name, description, group, help)
 }

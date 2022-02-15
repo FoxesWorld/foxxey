@@ -7,6 +7,9 @@ class FolderConfigFileProvider(
 ) : ConfigFileProvider {
 
     override fun provide(configInfo: ConfigInfo): Result<ConfigFile> = runCatching {
+        if (configInfo.name.isEmpty()) {
+            throw IllegalStateException("Unable provide config without name")
+        }
         val configPath = if (configInfo.group.isEmpty()) {
             configInfo.name
         } else "${configInfo.group}/${configInfo.name}"

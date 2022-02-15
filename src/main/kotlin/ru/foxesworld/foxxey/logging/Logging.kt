@@ -1,27 +1,37 @@
 package ru.foxesworld.foxxey.logging
 
-import kotlinx.coroutines.runBlocking
 import mu.KLogger
-import mu.KotlinLogging
 import kotlin.system.measureTimeMillis
 
 /**
  * @author vie10
  **/
 
-private val log = KotlinLogging.logger { }
-
-fun main() {
-    runBlocking {
-        log.wrappedRunWithoutResult("module", "start") {
-
-        }
-    }
-}
-
 fun KLogger.debugExceptionAndInfoMessage(exception: Throwable, msg: () -> Any) {
     info(msg)
     debug(exception, msg)
+}
+
+fun <T> KLogger.logging(
+    target: Any,
+    verb: String,
+    startEnd: String = "ing",
+    failureEnd: String = "ing",
+    successEnd: String = "ed",
+): LoggingBlock<T>.() -> Unit = {
+    onStart = {
+        info { "${verb.replaceFirstChar { it.uppercase() }}$startEnd $target.." }
+    }
+    onFailure = {
+        debugExceptionAndInfoMessage(it) { "${verb}$failureEnd $target failed." }
+    }
+    onSuccess = { measuredMillis, _ ->
+        info {
+            "${
+                target.toString().replaceFirstChar { it.uppercase() }
+            } ${verb}$successEnd in $measuredMillis millis."
+        }
+    }
 }
 
 suspend fun KLogger.wrappedRunWithoutResult(
@@ -33,21 +43,21 @@ suspend fun KLogger.wrappedRunWithoutResult(
     block: suspend () -> Unit
 ) {
     wrappedRunWithoutResult(
-        logging = {
-            onStart = {
-                info { "${verb.replaceFirstChar { it.uppercase() }}$startEnd $target.." }
-            }
-            onFailure = {
-                debugExceptionAndInfoMessage(it) { "${verb}$failureEnd $target failed." }
-            }
-            onSuccess = { measuredMillis, _ ->
-                info {
-                    "${
-                        target.toString().replaceFirstChar { it.uppercase() }
-                    } ${verb}$successEnd in $measuredMillis millis."
-                }
-            }
-        },
+        logging(target, verb, startEnd, failureEnd, successEnd),
+        block
+    )
+}
+
+suspend fun <T> KLogger.wrappedRun(
+    target: Any,
+    verb: String,
+    startEnd: String = "ing",
+    failureEnd: String = "ing",
+    successEnd: String = "ed",
+    block: suspend () -> T
+): Result<T> {
+    return wrappedRun(
+        logging<T>(target, verb, startEnd, failureEnd, successEnd),
         block
     )
 }

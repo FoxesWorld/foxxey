@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 ///////////////////////////////////////////////////////////////////////////
 // Constants
 ///////////////////////////////////////////////////////////////////////////
@@ -8,6 +11,8 @@ val mainClass = "ru.foxesworld.foxxey.FoxxeyKt"
 // Versions
 ///////////////////////////////////////////////////////////////////////////
 
+val mockk = "1.12.2"
+val kotest = "5.1.0"
 val kotlinCoroutines = "1.6.0"
 val hoplite = "1.4.16"
 val koin = "3.1.5"
@@ -60,10 +65,11 @@ dependencies {
 
     // Testing
     testImplementation(kotlinCoroutines("test"))
-    testImplementation(platform("org.junit:junit-bom:$junitBom"))
-    testImplementation("org.junit.jupiter", "junit-jupiter")
     testImplementation(koin("test-junit5"))
-    testImplementation("org.mockito", "mockito-core", mockito)
+    testImplementation(kotest("runner-junit5-jvm"))
+    testImplementation(kotest("assertions-core-jvm"))
+    testImplementation(kotest("property-jvm"))
+    testImplementation("io.mockk", "mockk", mockk)
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -79,13 +85,21 @@ tasks.jar {
 tasks.test {
     useJUnitPlatform()
     testLogging {
+        showExceptions = true
         showStandardStreams = true
+        events = setOf(
+            TestLogEvent.FAILED,
+            TestLogEvent.PASSED
+        )
+        exceptionFormat = TestExceptionFormat.FULL
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Helpers for beautify previous code
 ///////////////////////////////////////////////////////////////////////////
+
+fun kotest(part: String) = "io.kotest:kotest-$part:$kotest"
 
 fun kotlinCoroutines(part: String) = "org.jetbrains.kotlinx:kotlinx-coroutines-$part:$kotlinCoroutines"
 
