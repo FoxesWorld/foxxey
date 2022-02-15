@@ -1,114 +1,91 @@
 package ru.foxesworld.foxxey.config
 
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import ru.foxesworld.foxxey.config.RuntimeConfig.removeFromRuntime
 import ru.foxesworld.foxxey.config.RuntimeConfig.runtimeValue
 import ru.foxesworld.foxxey.config.RuntimeConfig.uploadToRuntime
 
 /**
  * @author vie10
- */
-internal class RuntimeConfigTest {
+ **/
+class RuntimeConfigTest : BehaviorSpec({
 
-    @BeforeEach
-    fun cleanRuntimeConfig() {
+    afterEach {
         RuntimeConfig.clean()
     }
 
-    @Test
-    fun `GIVEN empty runtime config WHEN remove config THEN does not throw`() {
-        assertDoesNotThrow {
-            TestConfig::class.removeFromRuntime()
+    given("empty runtime config") {
+        `when`("assigns value") {
+            then("the same value is accessible") {
+                val value = "some text"
+                TestConfig::notNullName.runtimeValue = value
+
+                TestConfig::notNullName.runtimeValue shouldBe value
+            }
+        }
+
+        `when`("uploads object") {
+            then("the object fields is accessible") {
+                val config = TestConfig()
+                config.uploadToRuntime()
+
+                TestConfig::notNullName.runtimeValue shouldBe config.notNullName
+            }
+        }
+
+        `when`("remove config") {
+            then("does not throw") {
+                shouldNotThrowAny {
+                    TestConfig::class.removeFromRuntime()
+                }
+            }
+        }
+
+        `when`("invokes nullable value") {
+            then("returns null") {
+                TestConfig::nullableName.runtimeValue shouldBe null
+            }
+        }
+
+        `when`("invokes not null value") {
+            then("throws NullPointerException") {
+                shouldThrow<NullPointerException> {
+                    TestConfig::notNullName.runtimeValue
+                }
+            }
         }
     }
 
-    @Test
-    fun `GIVEN removed config WHEN invokes value THEN throws NullPointerException`() {
-        val config = TestConfig()
-        config.uploadToRuntime()
-        TestConfig::class.removeFromRuntime()
-        assertThrows<NullPointerException> {
-            TestConfig::name.runtimeValue
-        }
-    }
+    given("runtime config with uploaded object") {
+        `when`("removes uploaded object") {
+            then("invoke not null value throws NullPointerException") {
+                TestConfig().uploadToRuntime()
+                TestConfig::class.removeFromRuntime()
 
-    @Test
-    fun `GIVEN removed config WHEN invokes nullable value THEN returns null`() {
-        val config = TestConfig()
-        config.uploadToRuntime()
-        TestConfig::class.removeFromRuntime()
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == null
+                shouldThrow<NullPointerException> {
+                    TestConfig::notNullName.runtimeValue
+                }
+            }
         }
-    }
 
-    @Test
-    fun `GIVEN clean runtime config WHEN invokes value THEN throws NullPointerException`() {
-        val config = TestConfig()
-        config.uploadToRuntime()
-        RuntimeConfig.clean()
-        assertThrows<NullPointerException> {
-            TestConfig::name.runtimeValue
-        }
-    }
+        `when`("cleans") {
+            then("invoke not null value throws NullPoinerException") {
+                TestConfig().uploadToRuntime()
+                RuntimeConfig.clean()
 
-    @Test
-    fun `GIVEN clean runtime config WHEN invokes nullable value THEN returns null`() {
-        val config = TestConfig()
-        config.uploadToRuntime()
-        RuntimeConfig.clean()
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == null
+                shouldThrow<NullPointerException> {
+                    TestConfig::notNullName.runtimeValue
+                }
+            }
         }
     }
-
-    @Test
-    fun `GIVEN empty runtime config WHEN invokes value THEN throws NullPointerException`() {
-        assertThrows<NullPointerException> {
-            TestConfig::name.runtimeValue
-        }
-    }
-
-    @Test
-    fun `GIVEN empty runtime config WHEN invokes nullable value THEN returns null`() {
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == null
-        }
-    }
-
-    @Test
-    fun `GIVEN assigned value WHEN invokes THEN returns the same value`() {
-        val value = "some another text"
-        TestConfig::nullableName.runtimeValue = value
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == value
-        }
-    }
-
-    @Test
-    fun `GIVEN uploaded object WHEN invokes value THEN returns the same value`() {
-        val config = TestConfig()
-        config.uploadToRuntime()
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == config.nullableName
-        }
-    }
-
-    @Test
-    fun `GIVEN uploaded object WHEN invokes nullable value THEN returns the same value`() {
-        val config = TestConfig(null)
-        config.uploadToRuntime()
-        assertTrue {
-            TestConfig::nullableName.runtimeValue == config.nullableName
-        }
-    }
+}) {
 
     data class TestConfig(
         val nullableName: String? = "name",
-        val name: String = "name"
+        val notNullName: String = "name"
     )
 }

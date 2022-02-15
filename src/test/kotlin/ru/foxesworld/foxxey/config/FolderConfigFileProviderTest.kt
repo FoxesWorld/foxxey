@@ -1,68 +1,89 @@
 package ru.foxesworld.foxxey.config
 
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.result.shouldBeFailureOfType
+import io.kotest.matchers.result.shouldBeSuccess
+import io.kotest.matchers.string.shouldContainIgnoringCase
+import io.kotest.matchers.string.shouldStartWith
 import java.io.File
-import org.junit.jupiter.api.Assertions.*
 
 /**
  * @author vie10
- */
-internal class FolderConfigFileProviderTest {
+ **/
+class FolderConfigFileProviderTest : BehaviorSpec({
+    val nonExistentFolder = File("some folder that not exists")
+    val someConfigInfo = ConfigInfo("name", "", "")
 
-    private val nonExistentFolder = File("some folder that not exists")
-    private val emptyConfigInfo = newConfigInfo()
-
-    @Test
-    fun `GIVEN config info with group WHEN provides config file THEN config file path contains name and group`() {
-        val configInfo = ConfigInfo("name", "group", "")
-        val instance = FolderConfigFileProvider(nonExistentFolder)
-        val configFile = instance.provide(configInfo).getOrThrow()
-        assertTrue {
-            configFile.path.run {
-                contains(configInfo.name) && contains(configInfo.group)
+    given("config info with empty name") {
+        `when`("provides config file") {
+            then("throws IllegalArgumentException") {
+                val configInfoWithEmptyName = ConfigInfo("", "", "")
+                val instance = FolderConfigFileProvider(nonExistentFolder)
+                instance.provide(configInfoWithEmptyName).shouldBeFailureOfType<IllegalStateException>()
             }
         }
     }
 
-    @Test
-    fun `GIVEN config info without group WHEN provides config file THEN config file path contains name`() {
-        val configInfo = ConfigInfo("name", "", "")
-        val instance = FolderConfigFileProvider(nonExistentFolder)
-        val configFile = instance.provide(configInfo).getOrThrow()
-        assertTrue {
-            configFile.path.contains(configInfo.name)
+    given("non-existent folder") {
+        `when`("provides config file") {
+            then("does not throw") {
+                val instance = FolderConfigFileProvider(nonExistentFolder)
+                instance.provide(someConfigInfo)
+            }
         }
     }
 
-    @Test
-    fun `GIVEN folder WHEN provides config file THEN config file path starts with the folder`() {
-        val configInfo = newConfigInfo(name = "name")
-        val instance = FolderConfigFileProvider(nonExistentFolder)
-        val configFile = instance.provide(configInfo).getOrThrow()
-        assertTrue {
-            configFile.path.startsWith(nonExistentFolder.name)
+    given("jar resources folder") {
+        `when`("provides config file") {
+            then("success") {
+                val instance = FolderConfigFileProvider(nonExistentFolder)
+                instance.provide(someConfigInfo).shouldBeSuccess()
+            }
         }
     }
 
-    @Test
-    fun `GIVEN jar resources folder WHEN provides config file THEN does not throw`() {
-        val resourceFilePath = FolderConfigFileProvider::class.java.getResource("/test")!!.file
-        val testFolder = File(resourceFilePath)
-        val instance = FolderConfigFileProvider(testFolder)
-        assertDoesNotThrow {
-            instance.provide(emptyConfigInfo).getOrThrow()
+    given("folder") {
+        `when`("provides config file") {
+            then("config file path starts with the folder") {
+                val instance = FolderConfigFileProvider(nonExistentFolder)
+                val configFile = instance.provide(someConfigInfo)
+                configFile.shouldBeSuccess {
+                    it.path shouldStartWith nonExistentFolder.name
+                }
+            }
         }
     }
 
-    @Test
-    fun `GIVEN non-existent folder WHEN provides config file THEN does not throw`() {
-        val instance = FolderConfigFileProvider(nonExistentFolder)
-        assertDoesNotThrow {
-            instance.provide(emptyConfigInfo).getOrThrow()
+    given("config info with name") {
+
+        and("empty group") {
+            `when`("provides config file") {
+                then("config file path contains name") {
+                    val name = "name"
+                    val configInfo = ConfigInfo(name, "", "")
+                    val instance = FolderConfigFileProvider(nonExistentFolder)
+
+                    instance.provide(configInfo).shouldBeSuccess {
+                        it.path shouldContainIgnoringCase name
+                    }
+                }
+            }
+        }
+
+        and("group") {
+            `when`("provides config file") {
+                then("config file path contains name and group") {
+                    val name = "name"
+                    val group = "group"
+                    val configInfo = ConfigInfo(name, group, "")
+                    val instance = FolderConfigFileProvider(nonExistentFolder)
+
+                    instance.provide(configInfo).shouldBeSuccess {
+                        it.path shouldContainIgnoringCase name
+                        it.path shouldContainIgnoringCase group
+                    }
+                }
+            }
         }
     }
-
-    private fun newConfigInfo(name: String = "", group: String = "", className: String = "") =
-        ConfigInfo(name, group, className)
-}
+})

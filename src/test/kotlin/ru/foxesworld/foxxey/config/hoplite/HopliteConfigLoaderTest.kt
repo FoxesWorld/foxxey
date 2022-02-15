@@ -1,142 +1,78 @@
 package ru.foxesworld.foxxey.config.hoplite
 
-import com.sksamuel.hoplite.ConfigException
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
-import org.mockito.exceptions.base.MockitoException
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.result.shouldBeFailure
+import io.kotest.matchers.result.shouldBeSuccess
+import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
 import ru.foxesworld.foxxey.config.ConfigFile
 import ru.foxesworld.foxxey.config.ConfigFileProvider
 import ru.foxesworld.foxxey.config.ConfigInfo
+import ru.foxesworld.foxxey.config.FolderConfigFileProvider
+import java.io.File
 import kotlin.reflect.jvm.jvmName
-import org.junit.jupiter.api.Assertions.*
 
-private const val DEFAULT_NAME = "default name"
+private const val EXTENSION = "json"
 
 /**
  * @author vie10
- */
-internal class HopliteConfigLoaderTest {
+ **/
+class HopliteConfigLoaderTest : BehaviorSpec({
 
-    @Test
-    fun `GIVEN config info with not existent class name WHEN loads THEN does not throw`() {
-        val configInfo = newConfigInfo()
-        val content = "{}".toByteArray()
-        val configLoader = new {
-            provideFile(configInfo, content)
-        }
-        assertDoesNotThrow {
-            configLoader.load(configInfo)
-        }
-    }
+    given("not existent config info") {
+        `when`("loads") {
+            then("failure") {
+                val notExistentFolder = File("some not exists folder")
+                val fileProvider = FolderConfigFileProvider(notExistentFolder)
+                val instance = HopliteConfigLoader(fileProvider, EXTENSION)
+                val notExistentConfigInfo = ConfigInfo("some not existent config info", "", "")
 
-    @Test
-    fun `GIVEN config file provider throwing exception on provide WHEN loads THEN throws the same exception`() {
-        val exception = MockitoException("")
-        val configInfo = newConfigInfo(className = ConfigWithoutRequiredFields::class.jvmName)
-        val configLoader = new {
-            `when`(provide(configInfo)).thenThrow(exception)
-        }
-        assertTrue {
-            configLoader.load(configInfo).exceptionOrNull() == exception
-        }
-    }
-
-    @Test
-    fun `GIVEN config file throwing exception on read WHEN loads THEN throws the same exception`() {
-        val exception = MockitoException("")
-        val configInfo = newConfigInfo(className = ConfigWithRequiredFields::class.jvmName)
-        val configLoader = new {
-            provideFile(configInfo) {
-                `when`(read()).thenThrow(exception)
+                instance.load(notExistentConfigInfo).shouldBeFailure()
             }
         }
-        assertTrue {
-            configLoader.load(configInfo).exceptionOrNull() == exception
-        }
     }
 
-    @Test
-    fun `GIVEN config file contains required name WHEN loads THEN does not throw`() {
-        val configInfo = newConfigInfo(className = ConfigWithRequiredFields::class.jvmName)
-        val content = "{\"name\":\"$DEFAULT_NAME\"}".toByteArray()
-        val configLoader = new {
-            provideFile(configInfo, content)
-        }
-        assertDoesNotThrow {
-            configLoader.load(configInfo).getOrThrow()
-        }
-    }
+    given("existent config info") {
+        val existentConfigInfo = ConfigInfo("name", "", TestConfig::class.jvmName)
 
-    @Test
-    fun `GIVEN config file contains not required name WHEN loads THEN throws ConfigException`() {
-        val configInfo = newConfigInfo(className = ConfigWithRequiredFields::class.jvmName)
-        val content = "{}".toByteArray()
-        val configLoader = new {
-            provideFile(configInfo, content)
-        }
-        assertThrows<ConfigException> {
-            configLoader.load(configInfo).getOrThrow()
-        }
-    }
+        and("config file without optional field") {
+            `when`("loads") {
+                val configFile = mockk<ConfigFile>()
+                every { configFile.read() } returns Result.success("{}".toByteArray())
+                val fileProvider = mockk<ConfigFileProvider>()
+                every { fileProvider.provide(existentConfigInfo) } returns Result.success(configFile)
+                val instance = HopliteConfigLoader(fileProvider, EXTENSION)
 
-    @Test
-    fun `GIVEN config file contains name WHEN loads THEN returns model with the same name`() {
-        val configInfo = newConfigInfo(className = ConfigWithoutRequiredFields::class.jvmName)
-        val name = "another name"
-        val content = "{\"name\":\"$name\"}".toByteArray()
-        val configLoader = new {
-            provideFile(configInfo, content)
+                then("success") {
+                    instance.load(existentConfigInfo).shouldBeSuccess()
+                }
+
+                then("assigns default value") {
+                    instance.load(existentConfigInfo).shouldBeSuccess {
+                        (it as TestConfig).name shouldBe TestConfig.DEFAULT_NAME
+                    }
+                }
+            }
         }
-        val configInstance = configLoader.load(configInfo).getOrThrow() as ConfigWithoutRequiredFields
-        assertTrue {
-            configInstance.name == name
+
+        `when`("loads") {
+            then("success") {
+                val configFile = mockk<ConfigFile>()
+                every { configFile.read() } returns Result.success("{\"name\":\"name\"}".toByteArray())
+                val fileProvider = mockk<ConfigFileProvider>()
+                every { fileProvider.provide(existentConfigInfo) } returns Result.success(configFile)
+                val instance = HopliteConfigLoader(fileProvider, EXTENSION)
+
+                instance.load(existentConfigInfo).shouldBeSuccess()
+            }
         }
     }
+}) {
 
-    @Test
-    fun `GIVEN config file contains not name WHEN loads THEN returns model with default name`() {
-        val configInfo = newConfigInfo(className = ConfigWithoutRequiredFields::class.jvmName)
-        val content = "{}".toByteArray()
-        val configLoader = new {
-            provideFile(configInfo, content)
-        }
-        val configInstance = configLoader.load(configInfo).getOrThrow() as ConfigWithoutRequiredFields
-        assertTrue {
-            configInstance.name == DEFAULT_NAME
+    data class TestConfig(val name: String = DEFAULT_NAME) {
+        companion object {
+            const val DEFAULT_NAME = "default name"
         }
     }
-
-    private fun new(
-        extension: String = "json",
-        block: (ConfigFileProvider.() -> Unit)? = null
-    ): HopliteConfigLoader {
-        val configFileProvider = mock(ConfigFileProvider::class.java)
-        block?.run { configFileProvider.block() }
-        return HopliteConfigLoader(configFileProvider, extension)
-    }
-
-    private fun ConfigFileProvider.provideFile(configInfo: ConfigInfo, content: ByteArray) {
-        provideFile(configInfo) {
-            `when`(read()).then { content }
-        }
-    }
-
-    private fun ConfigFileProvider.provideFile(configInfo: ConfigInfo, block: ConfigFile.() -> Unit) {
-        val file = mock(ConfigFile::class.java).apply(block)
-        `when`(provide(configInfo)).then { file }
-    }
-
-    private fun newConfigInfo(name: String = "", group: String = "", className: String = "") =
-        ConfigInfo(name, group, className)
-
-    data class ConfigWithoutRequiredFields(
-        val name: String = DEFAULT_NAME
-    )
-
-    data class ConfigWithRequiredFields(
-        val name: String
-    )
 }
