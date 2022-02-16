@@ -1,15 +1,9 @@
 package ru.foxesworld.foxxey.modules
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import ru.foxesworld.foxxey.commands.Command
 import ru.foxesworld.foxxey.config.ConfigInfo
 import ru.foxesworld.foxxey.logging.wrappedRun
-import java.io.File
-import java.util.*
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.findAnnotation
@@ -24,21 +18,18 @@ private val log = KotlinLogging.logger { }
  **/
 class JarModuleSource(
     private val classLoaderImpl: JarClassLoader,
-    private val file: File
+    private val jar: JarFile
 ) : ModuleSource {
 
     override suspend fun importModule(): Result<Module> = log.wrappedRun(
-        target = "module from file ${file.name}",
+        target = "module from jar $jar",
         verb = "import"
     ) {
-        val jar = withContext(Dispatchers.IO) {
-            classLoaderImpl.addJar(file)
-            JarFile(file)
+        val allClasses = jar.classJVMNames.map { classLoaderImpl.findClassInJars(it) }
+        val module: Module = allClasses.findModule().getOrElse {
+            throw ModuleNotFoundException(it)
         }
-
-        val allClasses = jar.entries().toKClassList()
-        val module: Module = allClasses.findModule().getOrThrow()
-        log.debug { "Found module $module in jar $file" }
+        log.debug { "Found module $module in jar $jar" }
         allClasses.findCommands().getOrThrow().forEach {
             log.debug { "Found command $it in module $module" }
             module.addCommand(it)
@@ -49,13 +40,6 @@ class JarModuleSource(
         }
 
         module
-    }
-
-    private fun Enumeration<JarEntry>.toKClassList(): List<KClass<out Any>> = toList().filter {
-        it.name.endsWith(".class")
-    }.map {
-        val jvmName = it.name.replace("/", ".").substringBefore(".class")
-        classLoaderImpl.findClassInJars(jvmName)
     }
 
     private fun List<KClass<out Any>>.findModule(): Result<Module> = runCatching {
