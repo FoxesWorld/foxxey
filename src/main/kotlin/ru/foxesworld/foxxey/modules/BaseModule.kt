@@ -119,7 +119,7 @@ abstract class BaseModule(
     ) : Module.Info {
 
 
-        override fun equals(other: Any?): Boolean {
+        final override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
@@ -134,7 +134,7 @@ abstract class BaseModule(
             return true
         }
 
-        override fun hashCode(): Int {
+        final override fun hashCode(): Int {
             var result = id.hashCode()
             result = 31 * result + version.hashCode()
             result = 31 * result + description.hashCode()
