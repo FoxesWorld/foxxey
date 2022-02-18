@@ -1,4 +1,4 @@
-<img src=".assets/foxxey_banner.png" alt="foxxey banner">
+<img src=".github/icon.png" height="300" width="300" alt="icon"/>
 
 # Foxxey — modular application framework
 
