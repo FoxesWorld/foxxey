@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import org.koin.dsl.module
 import ru.foxesworld.foxxey.commands.Command
 import ru.foxesworld.foxxey.config.ConfigInfo
+import ru.foxesworld.foxxey.logging.debugExceptionAndInfoMessage
 import ru.foxesworld.foxxey.logging.wrappedRunWithoutResult
 import ru.foxesworld.foxxey.modules.Module.State
 import kotlin.reflect.full.companionObjectInstance
@@ -26,8 +27,18 @@ abstract class BaseModule(
         get() = _state
     private var _state: State = State.Unloaded
 
-    final override suspend fun start() = log.wrappedRunWithoutResult(
-        target = "module $this", verb = "start"
+    final override suspend fun start() = wrappedRunWithoutResult(
+        logging = {
+            onStart = {
+                log.info { "Starting module $this.." }
+            }
+            onFailure = {
+                log.debugExceptionAndInfoMessage(it) { "Starting module $this failed." }
+            }
+            onSuccess = { measuredMillis, _ ->
+                log.info { "Module $this started in $measuredMillis millis." }
+            }
+        }
     ) {
         if (state == State.Started) {
             throw IllegalStateException("Module already started")
@@ -41,8 +52,18 @@ abstract class BaseModule(
 
     protected abstract fun onStart()
 
-    final override suspend fun stop() = log.wrappedRunWithoutResult(
-        target = "module $this", verb = "stop"
+    final override suspend fun stop() = wrappedRunWithoutResult(
+        logging = {
+            onStart = {
+                log.info { "Stopping module $this.." }
+            }
+            onFailure = {
+                log.debugExceptionAndInfoMessage(it) { "Stopping module $this failed." }
+            }
+            onSuccess = { measuredMillis, _ ->
+                log.info { "Module $this stopped in $measuredMillis millis." }
+            }
+        }
     ) {
         if (state != State.Started) {
             throw IllegalStateException("Module already stopped")
@@ -53,8 +74,18 @@ abstract class BaseModule(
 
     protected abstract fun onStop()
 
-    final override suspend fun load() = log.wrappedRunWithoutResult(
-        target = "module $this", verb = "load"
+    final override suspend fun load() = wrappedRunWithoutResult(
+        logging = {
+            onStart = {
+                log.info { "Loading module $this.." }
+            }
+            onFailure = {
+                log.debugExceptionAndInfoMessage(it) { "Loading module $this failed." }
+            }
+            onSuccess = { measuredMillis, _ ->
+                log.info { "Module $this loaded in $measuredMillis millis." }
+            }
+        }
     ) {
         if (state != State.Unloaded) {
             throw IllegalStateException("Module already loaded")
@@ -66,8 +97,18 @@ abstract class BaseModule(
 
     protected open fun onLoad() {}
 
-    final override suspend fun unload() = log.wrappedRunWithoutResult(
-        target = "module $this", verb = "unload"
+    final override suspend fun unload() = wrappedRunWithoutResult(
+        logging = {
+            onStart = {
+                log.info { "Unloading module $this.." }
+            }
+            onFailure = {
+                log.debugExceptionAndInfoMessage(it) { "Unloading module $this failed." }
+            }
+            onSuccess = { measuredMillis, _ ->
+                log.info { "Module $this unloaded in $measuredMillis millis." }
+            }
+        }
     ) {
         if (state == State.Started) {
             throw IllegalStateException("Module should be stopped before unload")

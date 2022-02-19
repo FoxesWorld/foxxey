@@ -14,7 +14,7 @@ class ConfigInfoTest : BehaviorSpec({
         `when`("invokes class") {
             then("returns class with the jvm name") {
                 val classJvmName = ConfigInfoTest::class.jvmName
-                val configInfo = ConfigInfo("", "", classJvmName)
+                val configInfo = ConfigInfo("", classJvmName)
 
                 configInfo.clazz.jvmName shouldBe classJvmName
             }

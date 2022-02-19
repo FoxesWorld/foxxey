@@ -9,13 +9,21 @@ import kotlin.reflect.KClass
 data class ConfigInfo(
     @SerialName("name")
     val name: String,
-    @SerialName("group")
-    val group: String,
     @SerialName("className")
-    val className: String
+    val className: String,
+    @SerialName("group")
+    val group: String = NO_GROUP,
+    @SerialName("extension")
+    val extension: String = "json"
 ) {
 
+    val nameWithExtension: String by lazy { "$name.$extension" }
     internal val clazz: KClass<out Any> by lazy {
         Class.forName(className).kotlin
+    }
+
+    companion object {
+
+        const val NO_GROUP = ""
     }
 }

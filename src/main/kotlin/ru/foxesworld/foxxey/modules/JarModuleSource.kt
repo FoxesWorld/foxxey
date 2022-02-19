@@ -3,6 +3,7 @@ package ru.foxesworld.foxxey.modules
 import mu.KotlinLogging
 import ru.foxesworld.foxxey.commands.Command
 import ru.foxesworld.foxxey.config.ConfigInfo
+import ru.foxesworld.foxxey.logging.debugExceptionAndInfoMessage
 import ru.foxesworld.foxxey.logging.wrappedRun
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
@@ -17,15 +18,24 @@ private val log = KotlinLogging.logger { }
  * @author vie10
  **/
 class JarModuleSource(
-    private val classLoaderImpl: JarClassLoader,
+    private val jarClassLoader: JarClassLoader,
     private val jar: JarFile
 ) : ModuleSource {
 
-    override suspend fun importModule(): Result<Module> = log.wrappedRun(
-        target = "module from jar $jar",
-        verb = "import"
+    override suspend fun importModule(): Result<Module> = wrappedRun (
+        logging = {
+            onStart = {
+                log.info { "Importing module from $jar.." }
+            }
+            onFailure = {
+                log.debugExceptionAndInfoMessage(it) { "Importing module from $jar failed." }
+            }
+            onSuccess = { measuredMillis, _ ->
+                log.info { "Module imported from $jar in $measuredMillis millis." }
+            }
+        }
     ) {
-        val allClasses = jar.classJVMNames.map { classLoaderImpl.findClassInJars(it) }
+        val allClasses = jar.classJVMNames.map { jarClassLoader.findClassInJars(it) }
         val module: Module = allClasses.findModule().getOrElse {
             throw ModuleNotFoundException(it)
         }
@@ -53,7 +63,11 @@ class JarModuleSource(
     private fun List<KClass<out Any>>.findConfig(): Result<List<ConfigInfo>> = runCatching {
         filter { it.hasAnnotation<Config>() }.map {
             val annotation: Config = it.findAnnotation()!!
-            ConfigInfo(annotation.name, annotation.group, it.jvmName)
+            ConfigInfo(name = annotation.name, group = annotation.group, className = it.jvmName)
         }
+    }
+
+    override fun toString(): String {
+        return jar.toString()
     }
 }

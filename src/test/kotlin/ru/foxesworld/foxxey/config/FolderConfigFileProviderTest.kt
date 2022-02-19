@@ -3,6 +3,7 @@ package ru.foxesworld.foxxey.config
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailureOfType
 import io.kotest.matchers.result.shouldBeSuccess
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContainIgnoringCase
 import io.kotest.matchers.string.shouldStartWith
 import java.io.File
@@ -29,6 +30,21 @@ class FolderConfigFileProviderTest : BehaviorSpec({
             then("does not throw") {
                 val instance = FolderConfigFileProvider(nonExistentFolder)
                 instance.provide(someConfigInfo)
+            }
+        }
+    }
+
+    given("existent jar resources file") {
+        `when`("provides the file") {
+            then("the file exists") {
+                val existentJarResourcesFolder =
+                    File(FolderConfigFileProviderTest::class.java.getResource("/test")!!.file)
+                val existentConfigName = "testfile"
+                val existentConfigInfo = ConfigInfo(existentConfigName, "")
+                val instance = FolderConfigFileProvider(existentJarResourcesFolder)
+                instance.provide(existentConfigInfo).shouldBeSuccess() {
+                    it.exists() shouldBe true
+                }
             }
         }
     }
@@ -75,7 +91,7 @@ class FolderConfigFileProviderTest : BehaviorSpec({
                 then("config file path contains name and group") {
                     val name = "name"
                     val group = "group"
-                    val configInfo = ConfigInfo(name, group, "")
+                    val configInfo = ConfigInfo(name = name, group = group, className = "")
                     val instance = FolderConfigFileProvider(nonExistentFolder)
 
                     instance.provide(configInfo).shouldBeSuccess {

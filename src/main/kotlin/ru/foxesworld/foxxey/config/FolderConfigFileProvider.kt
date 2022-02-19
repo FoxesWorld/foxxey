@@ -11,8 +11,8 @@ class FolderConfigFileProvider(
             throw IllegalStateException("Unable provide config without name")
         }
         val configPath = if (configInfo.group.isEmpty()) {
-            configInfo.name
-        } else "${configInfo.group}/${configInfo.name}"
+            configInfo.nameWithExtension
+        } else "${configInfo.group}/${configInfo.nameWithExtension}"
         val file = folder.resolve(configPath)
         CommonFileWrap(file)
     }
@@ -28,6 +28,11 @@ class FolderConfigFileProvider(
         }
 
         override fun write(byteArray: ByteArray) {
+            file.parentFile.apply {
+                if (!exists()) {
+                    mkdirs()
+                }
+            }
             file.writeBytes(byteArray)
         }
 

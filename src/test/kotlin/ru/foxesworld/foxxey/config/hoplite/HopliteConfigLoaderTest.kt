@@ -34,7 +34,7 @@ class HopliteConfigLoaderTest : BehaviorSpec({
     }
 
     given("existent config info") {
-        val existentConfigInfo = ConfigInfo("name", "", TestConfig::class.jvmName)
+        val existentConfigInfo = ConfigInfo("name", TestConfig::class.jvmName)
 
         and("config file without optional field") {
             `when`("loads") {

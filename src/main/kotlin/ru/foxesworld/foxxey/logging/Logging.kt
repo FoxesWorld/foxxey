@@ -12,56 +12,6 @@ fun KLogger.debugExceptionAndInfoMessage(exception: Throwable, msg: () -> Any) {
     debug(exception, msg)
 }
 
-fun <T> KLogger.logging(
-    target: Any,
-    verb: String,
-    startEnd: String = "ing",
-    failureEnd: String = "ing",
-    successEnd: String = "ed",
-): LoggingBlock<T>.() -> Unit = {
-    onStart = {
-        info { "${verb.replaceFirstChar { it.uppercase() }}$startEnd $target.." }
-    }
-    onFailure = {
-        debugExceptionAndInfoMessage(it) { "${verb}$failureEnd $target failed." }
-    }
-    onSuccess = { measuredMillis, _ ->
-        info {
-            "${
-                target.toString().replaceFirstChar { it.uppercase() }
-            } ${verb}$successEnd in $measuredMillis millis."
-        }
-    }
-}
-
-suspend fun KLogger.wrappedRunWithoutResult(
-    target: Any,
-    verb: String,
-    startEnd: String = "ing",
-    failureEnd: String = "ing",
-    successEnd: String = "ed",
-    block: suspend () -> Unit
-) {
-    wrappedRunWithoutResult(
-        logging(target, verb, startEnd, failureEnd, successEnd),
-        block
-    )
-}
-
-suspend fun <T> KLogger.wrappedRun(
-    target: Any,
-    verb: String,
-    startEnd: String = "ing",
-    failureEnd: String = "ing",
-    successEnd: String = "ed",
-    block: suspend () -> T
-): Result<T> {
-    return wrappedRun(
-        logging<T>(target, verb, startEnd, failureEnd, successEnd),
-        block
-    )
-}
-
 suspend fun wrappedRunWithoutResult(
     logging: (LoggingBlock<Unit>.() -> Unit)? = null,
     block: suspend () -> Unit

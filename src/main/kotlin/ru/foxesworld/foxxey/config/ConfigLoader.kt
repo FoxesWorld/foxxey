@@ -6,4 +6,8 @@ package ru.foxesworld.foxxey.config
 interface ConfigLoader {
 
     fun load(configInfo: ConfigInfo): Result<Any>
+
+    enum class Type {
+        Default
+    }
 }

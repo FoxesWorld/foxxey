@@ -6,4 +6,8 @@ package ru.foxesworld.foxxey.config
 interface ConfigFileProvider {
 
     fun provide(configInfo: ConfigInfo): Result<ConfigFile>
+
+    enum class Source {
+        Jar
+    }
 }

@@ -5,7 +5,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // Constants
 ///////////////////////////////////////////////////////////////////////////
 
-val mainClass = "ru.foxesworld.foxxey.FoxxeyKt"
+val mainClassJvmName = "ru.foxesworld.foxxey.LauncherKt"
 
 ///////////////////////////////////////////////////////////////////////////
 // Versions
@@ -26,13 +26,18 @@ val serializationJson = "1.3.2"
 ///////////////////////////////////////////////////////////////////////////
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.20-M1"
     kotlin("plugin.serialization") version "1.6.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    application
 }
 
 group = "ru.foxesworld"
 version = "1.0-SNAPSHOT"
+
+application  {
+    mainClass.set(mainClassJvmName)
+}
 
 repositories {
     mavenCentral()
@@ -75,9 +80,25 @@ dependencies {
 // Tasks
 ///////////////////////////////////////////////////////////////////////////
 
+tasks.create("createBuildInfoResource") {
+    group = "build"
+    File("${buildDir.mainResourcesDir.path}/config", "build-info.json").apply {
+        parentFile.apply {
+            if (!exists()) {
+                mkdirs()
+            }
+        }
+        if (!exists()) {
+            createNewFile()
+        }
+        writeText("{\"v\":\"$version\"}")
+    }
+}
+
 tasks.jar {
+    dependsOn("createBuildInfoResource")
     manifest {
-        attributes["Main-Class"] = mainClass
+        attributes["Main-Class"] = mainClassJvmName
     }
 }
 
@@ -97,6 +118,9 @@ tasks.test {
 ///////////////////////////////////////////////////////////////////////////
 // Helpers for beautify previous code
 ///////////////////////////////////////////////////////////////////////////
+
+val File.mainResourcesDir: File
+    get() = File(this, "resources/main/")
 
 fun kotest(part: String) = "io.kotest:kotest-$part:$kotest"
 

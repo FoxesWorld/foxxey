@@ -7,14 +7,16 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import ru.foxesworld.foxxey.commands.BaseCommand
 import kotlin.reflect.jvm.jvmName
 
 class JarModuleSourceTest : BehaviorSpec({
     given("jar without classes") {
         val classLoader = mockk<JarClassLoader>()
-        every { classLoader.addJar(any()) } returns Unit
+        every { classLoader.addJar(any()) } just runs
 
         val jar = mockk<JarFile>()
         every { classLoader.findClassInJars(any()) } throws NullPointerException()
@@ -37,7 +39,7 @@ class JarModuleSourceTest : BehaviorSpec({
         val moduleClassName = TestModule::class.jvmName
 
         val classLoader = mockk<JarClassLoader>()
-        every { classLoader.addJar(any()) } returns Unit
+        every { classLoader.addJar(any()) } just runs
         val jar = mockk<JarFile>()
         every { classLoader.findClassInJars(moduleClassName) } returns TestModule::class
         every { jar.classJVMNames } returns listOf(moduleClassName)
