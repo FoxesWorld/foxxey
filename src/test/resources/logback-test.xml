@@ -1,5 +1,5 @@
 <configuration>
-    <appender name="TERMINAL">
+    <appender name="TERMINAL" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss} %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
         </encoder>
